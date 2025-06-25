@@ -118,6 +118,7 @@ st.markdown(
     have visibility into all orchestrators and GPUs.
     - **Transcoding Network Exclusion:** GPUs part of the transcoding network are not
     included.
+    - **Realtime AI GPUs Exclusion:** Still in beta and not discoverable on chain.
     """
 )
 st.markdown("<u>Future Improvements</u>", unsafe_allow_html=True)
