@@ -55,4 +55,4 @@ To deploy the application on [Streamlit Community Cloud](https://streamlit.io/cl
 - Data represents a snapshot of orchestrators and capabilities at the time of parsing.
 - Only GPUs ready to take jobs are shown.
 - Data is collected from a single gateway and may not include all orchestrators and GPUs.
-- Realtime AI GPUs are not yet included since they are still in beta and not available on the AIServiceCapabilities contract.
+- Realtime AI GPUs are excluded as they are still in beta and not discoverable on chain.
