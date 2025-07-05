@@ -15,13 +15,14 @@ if not CAPABILITIES_DATA_URL:
         "The CAPABILITIES_DATA_URL environment variable is not set. Please set it before running the application."
     )
 
+
 def abbreviate_name(name: str, max_length: int = 15):
     """Abbreviates a name to a maximum length, adding ellipsis if it exceeds the limit.
 
     Args:
         name: The name to abbreviate.
         max_length: The maximum length of the name before abbreviation.
-        
+
     Returns:
         The abbreviated name if it exceeds the max_length, otherwise the original name.
     """
@@ -56,14 +57,22 @@ def load_capabilities_data():
         caps = orch.get("capabilities", {})
         constraints = caps.get("constraints", {}).get("PerCapability", {})
         hardware = orch.get("hardware") or []
+        prices = orch.get("capabilities_prices") or []
 
         orch_name = ens_mapping.get(address.lower(), address)
+
+        price_map = {
+            price["constraint"]: price.get("pricePerUnit", 0)
+            for price in prices
+            if "capability" in price and "constraint" in price
+        }
 
         for hw in hardware:
             model = hw.get("model_id", "unknown")
             pipeline = hw.get("pipeline", "unknown")
             gpu_info = hw.get("gpu_info", {})
             for _, gpu in gpu_info.items():
+                price = price_map.get(model, 0)
                 rows.append(
                     {
                         "Orchestrator": address,
@@ -74,6 +83,7 @@ def load_capabilities_data():
                         "Model": model,
                         "Pipeline": pipeline,
                         "orch_uri": uri,
+                        "Price (Wei)": price,
                         "Capability": next(
                             (
                                 capability_map.get(str(k))
@@ -169,13 +179,17 @@ st.plotly_chart(gpu_bar_chart, use_container_width=True)
 st.subheader("Orchestrator GPU Distribution")
 st.markdown("**Total Orchestrators:** {}".format(df_filtered["Orchestrator"].nunique()))
 gpus_per_orchestrator = (
-    df_filtered.groupby(["Orchestrator", "Orchestrator Name"])["GPU Name"].count().reset_index()
+    df_filtered.groupby(["Orchestrator", "Orchestrator Name"])["GPU Name"]
+    .count()
+    .reset_index()
 )
 gpus_per_orchestrator.columns = ["Orchestrator", "Orchestrator Name", "GPU Count"]
-gpus_per_orchestrator = gpus_per_orchestrator.sort_values(by="GPU Count", ascending=False)
-gpus_per_orchestrator["Orchestrator Name"] = gpus_per_orchestrator["Orchestrator Name"].apply(
-    lambda name: abbreviate_name(name)
+gpus_per_orchestrator = gpus_per_orchestrator.sort_values(
+    by="GPU Count", ascending=False
 )
+gpus_per_orchestrator["Orchestrator Name"] = gpus_per_orchestrator[
+    "Orchestrator Name"
+].apply(lambda name: abbreviate_name(name))
 orch_pie_chart = px.pie(
     gpus_per_orchestrator,
     names="Orchestrator Name",
